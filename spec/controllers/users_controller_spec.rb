@@ -210,6 +210,47 @@ describe UsersController do
           response.should redirect_to(signin_path)
         end
       end
+  end
+  describe "GET 'index' " do
+    describe "For not signed in users" do
+      it "Should deny access" do
+        get :index
+        response.should redirect_to signin_path
+      end
     end
+    describe "For signed in users" do
+      before(:each) do
+        @user = Factory(:user)
+        # add few more users to database, to display them all in index
+        Factory(:user, :email => "ma.ni.sh.ym@gmail.com")
+        Factory(:user, :email => "example@gmail.com")
+        Factory(:user, :email => "example2@gmail.com")
+        Factory(:user, :email => "example3@gmail.com")
+        test_sign_in @user
+      end
+      it "should show users index page" do
+        get :index
+        response.should be_success
+      end
+      it "should have right title" do
+        get :index
+        response.should have_selector("title", :content => "All users")
+      end
+      it "should display each user in a li element" do
+        get :index
+        User.all.each do |user|
+          response.should have_selector("li", :content => user.name)
+        end
+      end
+      it "should have a link to user" do
+        get :index
+        User.all.each do |user|
+          # have not figured out how to add link to user show page
+          response.should have_selector("a",:content => user.name)#, :href => user_path, )
+        end
+      end
+    end
+    
+  end
 end
 
