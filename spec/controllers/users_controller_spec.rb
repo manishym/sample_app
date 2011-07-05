@@ -222,11 +222,14 @@ describe UsersController do
       before(:each) do
         @user = Factory(:user)
         # add few more users to database, to display them all in index
-        Factory(:user, :email => "ma.ni.sh.ym@gmail.com")
-        Factory(:user, :email => "example@gmail.com")
-        Factory(:user, :email => "example2@gmail.com")
-        Factory(:user, :email => "example3@gmail.com")
+        second = Factory(:user, :email => "ma.ni.sh.ym@gmail.com")
+        third = Factory(:user, :email => "example@gmail.com")
         test_sign_in @user
+        @users = [@user, second, third]
+        30.times do
+          @users << Factory(:user, :email => Factory.next(:email)) 
+        end
+        
       end
       it "should show users index page" do
         get :index
@@ -248,6 +251,16 @@ describe UsersController do
           # have not figured out how to add link to user show page
           response.should have_selector("a",:content => user.name)#, :href => user_path, )
         end
+      end
+      it "should paginate users" do
+        get :index
+        response.should have_selector ("div.pagination")
+        response.should have_selector("span.disabled", :content => "Previous")
+        response.should have_selector("a", :href => "/users?page=2",
+                                            :content => "Next")
+        response.should have_selector("a", :href => "/users?page=2",
+                                            :content => "2")
+        
       end
     end
     
