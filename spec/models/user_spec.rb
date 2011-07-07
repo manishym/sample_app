@@ -96,11 +96,23 @@ describe User do
           correct_user = User.authenticate(@attr[:email], @attr[:password])
         end
       end
-      
-    end
-    
+    end    
   end
     
-  
+  describe "Admin attribute" do
+    before(:each) do
+      @user = User.create!(@attr)
+    end
+    it "should respond to admin? method" do
+      @user.should respond_to(:admin)
+    end
+    it "admin? should be false by default" do
+      @user.should_not be_admin
+    end
+    it "should be able to toggle admin" do
+      @user.toggle!(:admin)
+      @user.should be_admin
+    end
+  end
   
 end

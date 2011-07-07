@@ -262,8 +262,58 @@ describe UsersController do
                                             :content => "2")
         
       end
+      it "signed in admin should have links to delete users" do
+        admin = Factory(:user, :email => "admin@example.org")
+        test_sign_in(admin)
+        admin.toggle!(:admin)
+        user = User.all.second
+        get :index
+        response.should have_selector("a", :href => user_path(user),
+                                            :content => "delete")
+        
+      end
+      it "should not show delete link to not signed in user" do   
+        get :index 
+        user = User.all.second
+        response.should_not have_selector("a", :href => user_path(user),
+                                            :content => "delete")
+            
+      end
+      it "Should not show delete link to signed in no admin user" do
+        get :index 
+        user = User.all.second
+        test_sign_in (user)
+        response.should_not have_selector("a", :href => user_path(user),
+                                            :content => "delete")
+      end
+    end  
+  end
+  describe "DELETE 'destroy'" do
+    before(:each) do
+      @user = Factory(:user, :email => "admin@example.com")
+      @another_user = Factory(:user, :email => "second@example.com")
+      test_sign_in @user
     end
     
+    it "Should not delete a user if non admin deletes" do
+      test_sign_in @user
+      delete :destroy, :id => @user 
+      response.should redirect_to(root_path)
+      
+    end
+    it "Should delete a user if admin deletes" do
+      @user.toggle!(:admin)
+       lambda do
+          delete :destroy, :id => @another_user
+        end.should change(User, :count).by(-1)
+      
+    end
+    it "admin should not be able to delete himself" do
+      @user.toggle! :admin
+      lambda do
+        delete :destroy, :id => @user 
+      end.should_not change(User, :count)
+    end
   end
 end
 

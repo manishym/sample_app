@@ -1,6 +1,8 @@
 class UsersController < ApplicationController
-  before_filter :authenticate, :only => [:index, :edit, :update]
+  before_filter :authenticate, :only => [:index, :edit, :update, :destroy]
   before_filter :correct_user, :only => [:edit, :update]
+  before_filter :admin_only, :only => :destroy
+  before_filter :not_signed_in, :only => [:new, :create]
   def index
     @title = "All users"
     @users = User.paginate(:page => params[:page])
@@ -41,6 +43,10 @@ class UsersController < ApplicationController
       render 'edit'
     end
   end
+  def destroy
+    User.find(params[:id]).destroy
+    redirect_to users_path
+  end
   private
   def authenticate
     deny_access unless signed_in?
@@ -48,5 +54,13 @@ class UsersController < ApplicationController
   def correct_user
     @user = User.find(params[:id])
     redirect_to(root_path) unless current_user?(@user)
+  end
+  def admin_only
+    user = User.find(params[:id])
+
+    redirect_to root_path if !current_user.admin? || current_user?(user)
+  end
+  def not_signed_in
+    redirect_to root_path, :notice => "Signed in users cannot do that" if signed_in?    
   end
 end
